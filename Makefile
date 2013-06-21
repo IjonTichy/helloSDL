@@ -22,7 +22,7 @@ EXE_NAME = helloSDL
 default: all
 
 all: ${OFILES}
-	@[ ${OFILES} ] || (echo "ERROR: Nothing to link" 1>&2; exit 1)
+	@[ -n "${OFILES}" ] || (echo "ERROR: Nothing to link" 1>&2; exit 1)
 	${LD} ${LFLAGS} ${OFILES} ${LIBS} -o ${EXE_NAME} 
 
 clean:
