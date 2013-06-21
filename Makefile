@@ -3,7 +3,7 @@ LD = g++
 
 CFLAGS =
 LFLAGS =
-LIBS   = -lSDL
+LIBS   = -lSDL -lSDL_image
 
 OPT_LEVEL = 2
 DBG_LEVEL = 3
@@ -11,9 +11,9 @@ DBG_LEVEL = 3
 SRCDIR   = src
 BUILDDIR = build
 
-CFILES = $(wildcard ${SRCDIR}/*.c)
+CFILES = $(wildcard ${SRCDIR}/*.cpp)
 HFILES = $(wildcard ${SRCDIR}/*.h)
-OFILES = $(patsubst ${SRCDIR}/%.c, ${BUILDDIR}/%.o, ${CFILES})
+OFILES = $(patsubst ${SRCDIR}/%.cpp, ${BUILDDIR}/%.o, ${CFILES})
 
 EXE_NAME = helloSDL
 
@@ -28,6 +28,6 @@ all: ${OFILES}
 clean:
 	@rm -f ${BUILDDIR}/*.o
 
-${BUILDDIR}/%.o: ${SRCDIR}/%.c ${HFILES}
+${BUILDDIR}/%.o: ${SRCDIR}/%.cpp ${HFILES}
 	@mkdir -p ${BUILDDIR}
 	${CC} ${CFLAGS} -O${OPT_LEVEL} -g${DBG_LEVEL} -c $< -o $@
