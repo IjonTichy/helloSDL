@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    drawLevel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, screen, tmp);
+    drawLevel(0, 0, screen, tmp);
     SDL_UpdateRect(screen, 0,0,0,0);
 
     while (1)
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
                 break;
 
               case SDL_ACTIVEEVENT:
-                drawLevel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, screen, tmp);
+                drawLevel(0, 0, screen, tmp);
                 SDL_UpdateRect(screen, 0,0,0,0);
                 break;
 

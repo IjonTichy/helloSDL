@@ -109,16 +109,15 @@ int blit_wh(int x, int y, int w, int h, SDL_Surface * source, SDL_Surface * dest
 }
 
 
-void drawLevel(int centerX, int centerY, SDL_Surface * screen, Level level)
+void drawLevel(int baseX, int baseY, SDL_Surface * screen, Level level)
 {
     int i, j, x, y, tile;
 
-    int baseX = centerX - ((TILE_WIDTH * LEVEL_W) / 2);
-    int baseY = centerY - ((TILE_WIDTH * LEVEL_H) / 2);
+    struct levelsize size = level.size();
 
-    for (i = 0; i < LEVEL_W; i++)
+    for (i = 0; i < size.w; i++)
     {
-        for (j = 0; j < LEVEL_H; j++)
+        for (j = 0; j < size.h; j++)
         {
             x = baseX + (TILE_WIDTH  * i);
             y = baseY + (TILE_HEIGHT * j);

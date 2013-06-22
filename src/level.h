@@ -7,17 +7,18 @@
 #define LEVEL_W 16
 
 struct levelsize { int w; int h; };
+typedef std::vector< std::vector<int> > MapVector;
 
 class Level
 {
     private:
-        int x, y;
-        std::vector< std::vector<int> > map;
+        unsigned int width, height;
+        MapVector map;
 
     public:
         int getTile(int x, int y);
         int fromFile(char * filename);
-        int size(void);
+        struct levelsize size(void);
 };
 
 #endif
