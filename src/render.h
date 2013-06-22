@@ -1,5 +1,5 @@
-#ifndef _HELLOSDL_MAIN__
-#define _HELLOSDL_MAIN__
+#ifndef _HELLOSDL_RENDER__
+#define _HELLOSDL_RENDER__
 
 #include <SDL/SDL.h>
 #include "level.h"

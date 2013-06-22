@@ -5,6 +5,7 @@
 
 #include "const.h"
 
+#include "main.h"
 #include "render.h"
 #include "level.h"
 
@@ -16,8 +17,6 @@ void close(void)
 
 int main(int argc, char* argv[])
 {
-    int i, endMainloop = 0;
-
     if (SDL_Init(SDL_INIT_EVERYTHING))
     {
         fprintf(stderr, "%s: error: SDL_Init failed: %s\n", PROGNAME, SDL_GetError());
@@ -33,8 +32,19 @@ int main(int argc, char* argv[])
     }
 
     initTiles();
+    mainloop(screen);
+    close();
+    
+    return 0;
+}
 
+int mainloop(SDL_Surface * screen)
+{
     Level tmp;
+    SDL_Event event;
+
+    int x = 0, y = 0;
+    int xscroll = 0, yscroll = 0;
 
     if (tmp.fromFile("herpaderp.lvl"))
     {
@@ -47,31 +57,53 @@ int main(int argc, char* argv[])
 
     while (1)
     {
-        SDL_Event event;    
-        SDL_WaitEvent(&event);
+        x += xscroll;
+        y += yscroll;
+        SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
+        drawLevel(x, y, screen, tmp);
+        SDL_UpdateRect(screen, 0,0,0,0);
 
-        if (&event != NULL)
+        if (SDL_PollEvent(&event))
         {
             switch (event.type)
             {
-              case SDL_VIDEOEXPOSE:
-                SDL_UpdateRect(screen, 0,0,0,0);
-                break;
-
-              case SDL_ACTIVEEVENT:
-                drawLevel(0, 0, screen, tmp);
-                SDL_UpdateRect(screen, 0,0,0,0);
-                break;
-
               case SDL_QUIT:
-                endMainloop = 1;
+                return 1;
                 break;
+            }
+
+            // This will be massively cleaned up later
+            
+            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+            {
+                SDLKey key = event.key.keysym.sym;
+
+                if (event.type == SDL_KEYDOWN)
+                {
+                    switch (key)
+                    {
+                      case SDLK_ESCAPE: return 1; 
+                      case SDLK_LEFT: xscroll--; break; 
+                      case SDLK_RIGHT: xscroll++; break;
+                      case SDLK_UP: yscroll--; break;
+                      case SDLK_DOWN: yscroll++; break;
+                    }
+                }
+                else  // must be KEYUP
+                {
+                    switch (key)
+                    {
+                      case SDLK_LEFT: xscroll++; break;
+                      case SDLK_RIGHT: xscroll--; break;
+                      case SDLK_UP: yscroll++; break;
+                      case SDLK_DOWN: yscroll--; break;
+                    }
+                }
             }
         }
 
-        if (endMainloop) { break; }
+        SDL_Delay(1);
     }
 
-    close();
     return 0;
 }
