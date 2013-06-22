@@ -30,7 +30,7 @@ SDL_Surface * loadImage(char * filename)
 
 SDL_Surface * initScreen(void)
 {
-    SDL_Surface * ret = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, SDL_HWSURFACE);
+    SDL_Surface * ret = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, SDL_SWSURFACE);
 
     // do error checking here later, once we have a purpose for this project
 
@@ -52,7 +52,6 @@ int initTiles(void)
         if (sprite == NULL)
         {
             // ... up until here.
-
             if (errorSprite == NULL)
             {
                 tile_errno = TILE_NOERRORSPRITE;
@@ -65,11 +64,10 @@ int initTiles(void)
             ret++;
         }
 
-        printf("set tile %d (\"%s\") - ret is %d\n", i, TileFiles[i], ret);
         TileSprites[i] = sprite;
     }
 
-    if (ret == 0)
+    if (ret == 0 && errorSprite != NULL)
     {
         SDL_FreeSurface(errorSprite);
     }
@@ -93,25 +91,29 @@ int freeTiles(void)
     return ret;
 }
 
-void blit(int x, int y, SDL_Surface * source, SDL_Surface * dest)
+int blit(int x, int y, SDL_Surface * source, SDL_Surface * dest)
 {
-    blit_wh(x, y, source->w, source->h, source, dest);
+    return blit_wh(x, y, source->w, source->h, source, dest);
 }
 
-void blit_wh(int x, int y, int w, int h, SDL_Surface * source, SDL_Surface * dest)
+int blit_wh(int x, int y, int w, int h, SDL_Surface * source, SDL_Surface * dest)
 {
     SDL_Rect offset, size;
+    int ret;
 
     offset.x = x; offset.y = y;
     size.w   = w; size.h = h;
 
-    SDL_BlitSurface(source, &size, dest, &offset);
+    ret = SDL_BlitSurface(source, &size, dest, &offset);
+    return ret;
 }
 
 
 void drawLevel(int centerX, int centerY, SDL_Surface * screen)
 {
     int i, j, x, y, tile;
+
+    Level level;
 
     int baseX = centerX - ((TILE_WIDTH * LEVEL_W) / 2);
     int baseY = centerY - ((TILE_WIDTH * LEVEL_H) / 2);
@@ -122,9 +124,9 @@ void drawLevel(int centerX, int centerY, SDL_Surface * screen)
         {
             x = baseX + (TILE_WIDTH  * i);
             y = baseY + (TILE_HEIGHT * j);
-            tile = getTile(i, j);
+            tile = level.getTile(i, j);
 
-            printf("blitting tile %d (%d, %d) to (%d, %d)\n", tile, i, j, x, y);
+            if (tile == -1) { continue; }
 
             blit(x, y, TileSprites[tile], screen);
         }

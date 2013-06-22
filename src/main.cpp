@@ -16,7 +16,7 @@ void close(void)
 
 int main(int argc, char* argv[])
 {
-    int i;
+    int i, endMainloop = 0;
 
     if (SDL_Init(SDL_INIT_EVERYTHING))
     {
@@ -33,11 +33,38 @@ int main(int argc, char* argv[])
     }
 
     initTiles();
-    drawLevel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, screen);
 
-    SDL_Flip(screen);
-    SDL_Delay(5000);
+    Level tmp;
 
-    SDL_Quit();
+    tmp.fromFile("herpaderp.lvl");
+
+    while (1)
+    {
+        SDL_Event event;    
+        SDL_WaitEvent(&event);
+        
+        if (&event != NULL)
+        {
+            switch (event.type)
+            {
+              case SDL_VIDEOEXPOSE:
+                SDL_UpdateRect(screen, 0,0,0,0);
+                break;
+
+              case SDL_ACTIVEEVENT:
+                drawLevel(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, screen);
+                SDL_UpdateRect(screen, 0,0,0,0);
+                break;
+
+              case SDL_QUIT:
+                endMainloop = 1;
+                break;
+            }
+        }
+
+        if (endMainloop) { break; }
+    }
+
+    close();
     return 0;
 }
