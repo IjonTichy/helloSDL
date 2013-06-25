@@ -1,14 +1,27 @@
 #include <iostream>
 #include <fstream>
+#include <SDL/SDL.h>
 
 using namespace std;
 
 #include "level.h"
 #include "render.h"
+#include "tile.h"
+#include "const.h"
 
-int Level::getTile(int x, int y)
+Level::Level(void)
 {
-    if (x < 0 || x >= this->width || y < 0 || y >= this->height)
+    this->map.clear();
+    this->width = 0;
+    this->height = 0;
+}
+
+int Level::GetTile(int x, int y)
+{
+    unsigned int x2 = (unsigned int)x;
+    unsigned int y2 = (unsigned int)y;
+
+    if (x2 < 0 || x2 >= this->width || y2 < 0 || y2 >= this->height)
     {
         return -1;
     }
@@ -16,7 +29,7 @@ int Level::getTile(int x, int y)
     return this->map[y][x];
 }
 
-int Level::fromFile(char * filename)
+int Level::FromFile(char * filename)
 {
     char nextChar;
     unsigned int maxLength = 0;
@@ -67,8 +80,38 @@ int Level::fromFile(char * filename)
     return 0;
 } 
 
-struct levelsize Level::size(void)
+struct levelsize Level::Size(void)
 {
     struct levelsize ret = {this->width, this->height};
     return ret;
+}
+
+void Level::Render(SDL_Surface * screen, int baseX, int baseY)
+{
+    int i, j, x, y, tile;
+    int xmin, xmax, ymin, ymax;
+
+    xmin = -(baseX / TILE_WIDTH);
+    ymin = -(baseY / TILE_HEIGHT);
+
+    xmax = (-baseX + (int)screen->w + TILE_WIDTH - 1) / TILE_WIDTH;
+    ymax = (-baseY + (int)screen->h + TILE_HEIGHT - 1) / TILE_HEIGHT;
+
+    xmax = (int)min(this->width, (unsigned int)xmax);
+    ymax = (int)min(this->height, (unsigned int)ymax);
+
+    for (i = xmin; i < xmax; i++)
+    {
+        for (j = ymin; j < ymax; j++)
+        {
+            x = baseX + (TILE_WIDTH  * i);
+            y = baseY + (TILE_HEIGHT * j);
+
+            tile = this->GetTile(i, j);
+
+            if (tile == -1) { continue; }
+
+            blit(x, y, TileSprites[tile], screen);
+        }
+    }
 }

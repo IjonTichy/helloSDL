@@ -8,6 +8,7 @@
 #include "main.h"
 #include "render.h"
 #include "level.h"
+#include "tile.h"
 
 void close(void)
 {
@@ -46,13 +47,13 @@ int mainloop(SDL_Surface * screen)
     int x = 0, y = 0;
     int xscroll = 0, yscroll = 0;
 
-    if (tmp.fromFile("herpaderp.lvl"))
+    if (tmp.FromFile("herpaderp.lvl"))
     {
         fprintf(stderr, "%s: error: file \"herpaderp.lvl\" doesn't exist\n", PROGNAME);
         return 1;
     }
 
-    drawLevel(0, 0, screen, tmp);
+    tmp.Render(screen, x, y);
     SDL_UpdateRect(screen, 0,0,0,0);
 
     while (1)
@@ -60,7 +61,7 @@ int mainloop(SDL_Surface * screen)
         x += xscroll;
         y += yscroll;
         SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-        drawLevel(x, y, screen, tmp);
+        tmp.Render(screen, x, y);
         SDL_UpdateRect(screen, 0,0,0,0);
 
         if (SDL_PollEvent(&event))
@@ -87,6 +88,7 @@ int mainloop(SDL_Surface * screen)
                       case SDLK_RIGHT: xscroll++; break;
                       case SDLK_UP: yscroll--; break;
                       case SDLK_DOWN: yscroll++; break;
+                      default: break;
                     }
                 }
                 else  // must be KEYUP
@@ -97,6 +99,7 @@ int mainloop(SDL_Surface * screen)
                       case SDLK_RIGHT: xscroll--; break;
                       case SDLK_UP: yscroll++; break;
                       case SDLK_DOWN: yscroll--; break;
+                      default: break;
                     }
                 }
             }

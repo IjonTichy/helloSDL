@@ -1,92 +1,17 @@
 #include <SDL/SDL.h>
-#include <SDL/SDL_image.h>
 
 #include "const.h"
 #include "level.h"
+#include "tile.h"
+#include "loadData.h"
 
 #include "render.h"
-
-int tile_errno;
-
-char * TileFiles[TILECOUNT] = 
-{
-    "res/floor.png",
-    "res/wall.png",
-};
-
-SDL_Surface * TileSprites[TILECOUNT] = {NULL};
-
-SDL_Surface * loadImage(char * filename)
-{
-    SDL_Surface * rawImage = IMG_Load(filename);
- 
-    if (rawImage == NULL) { return rawImage; }
-
-    SDL_Surface * ret = SDL_DisplayFormat(rawImage);
-    SDL_FreeSurface(rawImage);
-
-    return ret;
-}
 
 SDL_Surface * initScreen(void)
 {
     SDL_Surface * ret = SDL_SetVideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, SDL_SWSURFACE);
 
     // do error checking here later, once we have a purpose for this project
-
-    return ret;
-}
-
-int initTiles(void)
-{
-    int i, ret = 0;
-    SDL_Surface * sprite;
-
-    // we can get away with it potentially not loading...
-    SDL_Surface * errorSprite = loadImage(ERRORSPRITE);
-
-    for (i = 0; i < TILECOUNT; i++)
-    {
-        sprite = loadImage(TileFiles[i]);
-
-        if (sprite == NULL)
-        {
-            // ... up until here.
-            if (errorSprite == NULL)
-            {
-                tile_errno = TILE_NOERRORSPRITE;
-                return -1;
-            }
-
-            sprite = errorSprite;
-            sprite->refcount++;
-
-            ret++;
-        }
-
-        TileSprites[i] = sprite;
-    }
-
-    if (ret == 0 && errorSprite != NULL)
-    {
-        SDL_FreeSurface(errorSprite);
-    }
-    
-    return ret;
-}
-
-int freeTiles(void)
-{
-    int i, ret = 0;
-    SDL_Surface * sprite;
-
-    for (i = 0; i < TILECOUNT; i++)
-    {
-        sprite = TileSprites[i];
-        if (sprite->refcount == 0) { ret++; continue; }
-
-        SDL_FreeSurface(sprite);
-    }
 
     return ret;
 }
@@ -111,9 +36,10 @@ int blit_wh(int x, int y, int w, int h, SDL_Surface * source, SDL_Surface * dest
 
 void drawLevel(int baseX, int baseY, SDL_Surface * screen, Level level)
 {
-    int i, j, x, y, tile;
+    unsigned int i, j, x, y;
+    int tile;
 
-    struct levelsize size = level.size();
+    struct levelsize size = level.Size();
 
     for (i = 0; i < size.w; i++)
     {
@@ -121,7 +47,7 @@ void drawLevel(int baseX, int baseY, SDL_Surface * screen, Level level)
         {
             x = baseX + (TILE_WIDTH  * i);
             y = baseY + (TILE_HEIGHT * j);
-            tile = level.getTile(i, j);
+            tile = level.GetTile(i, j);
 
             if (tile == -1) { continue; }
 

@@ -2,23 +2,28 @@
 #define _HELLOSDL_LEVEL__
 
 #include <vector>
+#include <SDL/SDL.h>
 
 #define LEVEL_H 16
 #define LEVEL_W 16
 
-struct levelsize { int w; int h; };
-typedef std::vector< std::vector<int> > MapVector;
+using namespace std;
+
+struct levelsize { unsigned int w; unsigned int h; };
+typedef vector< vector<int> > MapVector;
 
 class Level
 {
-    private:
+    protected:
         unsigned int width, height;
         MapVector map;
 
     public:
-        int getTile(int x, int y);
-        int fromFile(char * filename);
-        struct levelsize size(void);
+        Level(void);
+        int GetTile(int x, int y);
+        int FromFile(char * filename);
+        struct levelsize Size(void);
+        void Render(SDL_Surface * screen, int originX, int originY);
 };
 
 #endif

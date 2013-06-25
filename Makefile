@@ -1,7 +1,7 @@
 CC = g++
 LD = g++
 
-CFLAGS =
+CFLAGS = -pedantic -Wall -ansi
 LFLAGS =
 LIBS   = -lSDL -lSDL_image
 
