@@ -35,12 +35,15 @@ int Level::FromFile(char * filename)
     unsigned int maxLength = 0;
     ifstream ifs(filename);
     vector<Tile*> curRow;
+    Tile* newTile;
 
     if (ifs.fail()) { return 1; }
 
     this->map.clear();
 
     curRow.clear();
+
+    printf("Loading level...\n");
 
     while (1)
     {
@@ -52,16 +55,16 @@ int Level::FromFile(char * filename)
             maxLength = max(maxLength, (unsigned int)curRow.size());
             this->map.push_back(curRow);
             curRow.clear();
-            printf("\n");
         }
         else
         {
             switch (nextChar)
             {
-                case '1': curRow.push_back(&Tiles[1]); break;
-                default:  curRow.push_back(&Tiles[0]); break;
+                case '1': newTile = new Tile(this, "res/wall.png"); break;
+                default:  newTile = new Tile(this, "res/floor.png"); break;
             }
-            printf("%c", nextChar);
+
+            curRow.push_back(newTile);
         }
     }
 

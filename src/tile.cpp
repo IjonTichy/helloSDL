@@ -1,23 +1,20 @@
 #include <string>
+#include <typeinfo>
 #include <exception>
 
 #include <SDL/SDL.h>
+#include <cxxabi.h>
 
 #include "const.h"
 
 #include "tile.h"
+#include "level.h"
 #include "render.h"
 #include "loadData.h"
 
 using namespace std;
 
 int tile_errno;
-
-Tile Tiles[TILECOUNT] = 
-{
-    Tile("res/floor.png"),
-    Tile("res/wall.png"),
-};
 
 SDL_Surface* errorSprite;
 
@@ -42,36 +39,101 @@ void loadErrorSprite(void)
     }
 }
 
-int initSprites(void)
+spritemap_t Tile::cached_sprites;
+
+Tile::Tile(Level* l, string gfxPath = "") : sprite_path ("res/error.png")
 {
-    int i;
-    Tile* t;
-    for (i = 0; i < TILECOUNT; i++)
-    {
-        t = &(Tiles[i]);
-        t->initSprite();
+    this->my_level = l;
+    this->sprite = NULL;
 
-        if (t->badSprite) { i++; }
-    }
+#if defined(__GNUC__)
+    int status;
+    this->my_name = abi::__cxa_demangle(typeid(*this).name(), 0, 0, &status);
+#else
+    this->my_name = typeid(*this).name();
+#endif
 
-    return i;
-}
-
-Tile::Tile(string gfxPath = "") : spritePath ("res/error.png")
-{
     if (gfxPath.length() != 0)
     {
-        this->spritePath = gfxPath;
+        this->sprite_path = gfxPath;
+    }
+
+    this->LoadSprite();
+}
+
+void Tile::LoadSprite(void)
+{
+    SDL_Surface* cachedSprite = Tile::get_cached_sprite(this->sprite_path, (lightmod_t)lightmod_normal);
+
+    if (cachedSprite == NULL)
+    {
+        this->init_sprite();
+    }
+    else
+    {
+        if (this->sprite != cachedSprite && this->sprite != NULL) // found a new sprite
+        {
+            SDL_FreeSurface(this->sprite);
+        }
+
+        cachedSprite->refcount++;
+        this->sprite = cachedSprite;
     }
 }
 
-void Tile::initSprite(void) throw (NoErrorSprite)
+SDL_Surface* Tile::get_cached_sprite(string path, lightmod_t lightLevel)
+{
+    spritecache_t* cacheRow;
+
+    if (!Tile::cached_sprites.count(path)) { return NULL; }
+
+    cacheRow = Tile::cached_sprites[path];  // convenience
+
+    if (!cacheRow->count(lightLevel)) { return NULL; }
+
+    return (*cacheRow)[lightLevel];
+}
+
+void Tile::add_cached_sprite(string path, SDL_Surface* sprite, lightmod_t lightLevel)
+{
+    spritecache_t* cacheRow;
+    SDL_Surface * curSprite;
+
+    if (!Tile::cached_sprites.count(path))
+    {
+        Tile::cached_sprites[path] = new spritecache_t;
+    }
+
+    cacheRow = Tile::cached_sprites[path];
+    curSprite = (*cacheRow)[lightLevel];
+
+    if (curSprite != sprite && curSprite != NULL)
+    {
+        SDL_FreeSurface(curSprite);
+    }
+
+    (*cacheRow)[lightLevel] = sprite;
+    sprite->refcount++;
+}
+
+void Tile::clear_cached_sprites(void)
+{
+    spritemap_t::iterator rows;
+
+    for (rows = Tile::cached_sprites.begin(); rows != Tile::cached_sprites.end(); ++rows)
+    {
+        delete rows->second;
+        Tile::cached_sprites.erase(rows);
+    }
+}
+
+void Tile::init_sprite(void) throw (NoErrorSprite)
 {
     SDL_Surface* sprite;
     loadErrorSprite();
     
     this->badSprite = 0;
-    sprite = loadImage((char*)this->spritePath.c_str());
+    sprite = loadImage((char*)this->sprite_path.c_str());
 
     if (sprite == NULL)
     {
@@ -88,6 +150,8 @@ void Tile::initSprite(void) throw (NoErrorSprite)
     }
 
     this->sprite = sprite;
+
+    Tile::add_cached_sprite(this->sprite_path, this->sprite, lightmod_normal);
 }
 
 void Tile::Render(int x, int y, SDL_Surface* screen)

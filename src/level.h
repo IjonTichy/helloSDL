@@ -10,6 +10,8 @@
 
 using namespace std;
 
+class Tile;
+
 struct levelsize { unsigned int w; unsigned int h; };
 typedef vector< vector<Tile*> > MapVector;
 

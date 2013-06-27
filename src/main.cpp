@@ -89,8 +89,9 @@ int mainloop(SDL_Surface* screen)
 
 int main(int argc, char* argv[])
 {
+    guaranteeInit(SDL_INIT_EVERYTHING);
+
     SDL_Surface* screen = initScreen();
-    initSprites();
 
     mainloop(screen);
     close();
