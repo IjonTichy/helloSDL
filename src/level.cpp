@@ -16,14 +16,14 @@ Level::Level(void)
     this->height = 0;
 }
 
-int Level::GetTile(int x, int y)
+Tile* Level::GetTile(int x, int y)
 {
     unsigned int x2 = (unsigned int)x;
     unsigned int y2 = (unsigned int)y;
 
     if (x2 < 0 || x2 >= this->width || y2 < 0 || y2 >= this->height)
     {
-        return -1;
+        return NULL;
     }
 
     return this->map[y][x];
@@ -34,7 +34,7 @@ int Level::FromFile(char * filename)
     char nextChar;
     unsigned int maxLength = 0;
     ifstream ifs(filename);
-    vector<int> curRow;
+    vector<Tile*> curRow;
 
     if (ifs.fail()) { return 1; }
 
@@ -58,8 +58,8 @@ int Level::FromFile(char * filename)
         {
             switch (nextChar)
             {
-                case '1': curRow.push_back(1); break;
-                default:  curRow.push_back(0); break;
+                case '1': curRow.push_back(&Tiles[1]); break;
+                default:  curRow.push_back(&Tiles[0]); break;
             }
             printf("%c", nextChar);
         }
@@ -86,10 +86,11 @@ struct levelsize Level::Size(void)
     return ret;
 }
 
-void Level::Render(SDL_Surface * screen, int baseX, int baseY)
+void Level::Render(SDL_Surface* screen, int baseX, int baseY)
 {
-    int i, j, x, y, tile;
+    int i, j, x, y;
     int xmin, xmax, ymin, ymax;
+    Tile* tile;
 
     xmin = -(baseX / TILE_WIDTH);
     ymin = -(baseY / TILE_HEIGHT);
@@ -109,9 +110,9 @@ void Level::Render(SDL_Surface * screen, int baseX, int baseY)
 
             tile = this->GetTile(i, j);
 
-            if (tile == -1) { continue; }
+            if (tile == NULL) { continue; }
 
-            blit(x, y, TileSprites[tile], screen);
+            tile->Render(x, y, screen);
         }
     }
 }

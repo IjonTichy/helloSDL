@@ -12,34 +12,10 @@
 
 void close(void)
 {
-    freeTiles();
     SDL_Quit();
 }
 
-int main(int argc, char* argv[])
-{
-    if (SDL_Init(SDL_INIT_EVERYTHING))
-    {
-        fprintf(stderr, "%s: error: SDL_Init failed: %s\n", PROGNAME, SDL_GetError());
-        return 1;
-    }
-
-    SDL_Surface * screen = initScreen();
-
-    if (screen == NULL)
-    {
-        fprintf(stderr, "%s: error: could not init screen: %s\n", PROGNAME, SDL_GetError());
-        return 1;
-    }
-
-    initTiles();
-    mainloop(screen);
-    close();
-    
-    return 0;
-}
-
-int mainloop(SDL_Surface * screen)
+int mainloop(SDL_Surface* screen)
 {
     Level tmp;
     SDL_Event event;
@@ -108,5 +84,16 @@ int mainloop(SDL_Surface * screen)
         SDL_Delay(1);
     }
 
+    return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    SDL_Surface* screen = initScreen();
+    initSprites();
+
+    mainloop(screen);
+    close();
+    
     return 0;
 }

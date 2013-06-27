@@ -3,24 +3,23 @@
 
 #include <SDL/SDL.h>
 
+#include "const.h"
+
 #include "tile.h"
+#include "render.h"
 #include "loadData.h"
 
 using namespace std;
 
 int tile_errno;
 
-// TODO: remove TileFiles and TileSprites in favor of Tile class
-
-char * TileFiles[TILECOUNT] = 
+Tile Tiles[TILECOUNT] = 
 {
-    "res/floor.png",
-    "res/wall.png",
+    Tile("res/floor.png"),
+    Tile("res/wall.png"),
 };
 
-SDL_Surface * TileSprites[TILECOUNT] = {NULL};
-SDL_Surface * errorSprite;
-
+SDL_Surface* errorSprite;
 
 NoErrorSprite::NoErrorSprite(const char* reason = ""): reason ("Error sprite failed to load")
 {
@@ -43,66 +42,32 @@ void loadErrorSprite(void)
     }
 }
 
-int initTiles(void) throw (NoErrorSprite)
+int initSprites(void)
 {
-    int i, ret = 0;
-    SDL_Surface * sprite;
-
-    loadErrorSprite();
-
+    int i;
+    Tile* t;
     for (i = 0; i < TILECOUNT; i++)
     {
-        sprite = loadImage(TileFiles[i]);
+        t = &(Tiles[i]);
+        t->initSprite();
 
-        if (sprite == NULL)
-        {
-            if (errorSprite == NULL) // oh shit it wasn't actually defined
-            {
-                NoErrorSprite noerr;
-                throw noerr;
-            }
-
-            sprite = errorSprite;
-            sprite->refcount++;
-
-            ret++;
-        }
-
-        TileSprites[i] = sprite;
+        if (t->badSprite) { i++; }
     }
 
-    return ret;
+    return i;
 }
 
-int freeTiles(void)
-{
-    int i, ret = 0;
-    SDL_Surface * sprite;
-
-    for (i = 0; i < TILECOUNT; i++)
-    {
-        sprite = TileSprites[i];
-        if (sprite->refcount == 0) { ret++; continue; }
-
-        SDL_FreeSurface(sprite);
-    }
-
-    return ret;
-}
-
-Tile::Tile(string gfxPath)
+Tile::Tile(string gfxPath = "") : spritePath ("res/error.png")
 {
     if (gfxPath.length() != 0)
     {
         this->spritePath = gfxPath;
     }
-    
-    this->initSprite();
 }
 
-void Tile::initSprite(void)
+void Tile::initSprite(void) throw (NoErrorSprite)
 {
-    SDL_Surface * sprite;
+    SDL_Surface* sprite;
     loadErrorSprite();
     
     this->badSprite = 0;
@@ -123,4 +88,12 @@ void Tile::initSprite(void)
     }
 
     this->sprite = sprite;
+}
+
+void Tile::Render(int x, int y, SDL_Surface* screen)
+{
+    if (x <= -TILE_WIDTH || x >= (int)screen->w
+     || y <= -TILE_HEIGHT || y >= (int)screen->h) { return; }
+
+    blit(x, y, this->sprite, screen);
 }

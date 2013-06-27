@@ -9,8 +9,6 @@
 #define ERRORSPRITE "res/error.png"
 #define TILE_NOERRORSPRITE 1
 
-extern SDL_Surface * TileSprites[TILECOUNT];
-
 using namespace std;
 
 class NoErrorSprite: public exception
@@ -27,15 +25,18 @@ class Tile
 {
     protected:
         string spritePath;
-        void initSprite(void);
 
     public:
-        char badSprite;
         Tile(string gfxPath);
-        SDL_Surface * sprite;
+        void initSprite(void) throw (NoErrorSprite);
+        void Render(int x, int y, SDL_Surface* screen);
+
+        char badSprite;
+        SDL_Surface* sprite;
 };
 
-int initTiles(void) throw (NoErrorSprite);
-int freeTiles(void);
+int initSprites(void);
+
+extern Tile Tiles[TILECOUNT];
 
 #endif

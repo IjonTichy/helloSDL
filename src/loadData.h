@@ -3,6 +3,6 @@
 
 #include <SDL/SDL.h>
 
-SDL_Surface * loadImage(char * filename);
+SDL_Surface* loadImage(char * filename);
 
 #endif
