@@ -1,11 +1,21 @@
 #include <SDL/SDL.h>
 
+#include "render.h"
+
 #include "const.h"
 #include "level.h"
 #include "tile.h"
 #include "loadData.h"
 
-#include "render.h"
+InvalidLightMode::InvalidLightMode(const char* reason = ""): reason ("Invalid light mode")
+{
+    if (strlen(reason)) { this->reason = reason; }
+}
+
+const char* InvalidLightMode::what() const throw()
+{
+    return (const char*)this->reason;
+}
 
 int guaranteeInit(uint32_t flags)
 {
@@ -143,10 +153,10 @@ SDL_Surface* skeletonSurface(SDL_Surface* src)
 }
 
 
-SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint)
+SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint) throw (InvalidLightMode)
 {
     // Don't actually duplicate anything, but make it look like we did
-    if (tint == lightmod_normal)  
+    if (tint.r == 256 && tint.g == 256 && tint.b == 256)
     {
         src->refcount++;
         return src;
@@ -155,10 +165,24 @@ SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint)
     int rmod = tint.r - 256;
     int gmod = tint.g - 256;
     int bmod = tint.b - 256;
+    int r2, g2, b2, x, y;
     uint8_t r, g, b, a;
     uint32_t pixel;
 
-    int x, y;
+    switch (tint.mode)
+    {
+      case LM_ADD:
+        rmod = tint.r - 256;
+        gmod = tint.g - 256;
+        bmod = tint.b - 256;
+        break;
+
+      default:
+        rmod = tint.r;
+        gmod = tint.g;
+        bmod = tint.b;
+        break;
+    }
 
     SDL_Surface* ret;
 
@@ -184,9 +208,29 @@ SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint)
         {
             SDL_GetRGBA(getpixel(src, x, y), src->format, &r, &g, &b, &a);
 
-            r = (uint8_t)max(0, min((int)r + rmod, 255));
-            g = (uint8_t)max(0, min((int)g + gmod, 255));
-            b = (uint8_t)max(0, min((int)b + bmod, 255));
+            switch (tint.mode)
+            {
+              case LM_ADD:
+                r2 = (int)r + rmod;
+                g2 = (int)g + gmod;
+                b2 = (int)b + bmod;
+                break;
+
+              case LM_MULTIPLY:
+                r2 = ((int)r * rmod) / 256;
+                g2 = ((int)g * gmod) / 256;
+                b2 = ((int)b * bmod) / 256;
+                break;
+
+              default:
+                throw InvalidLightMode();
+                break;
+            }
+
+            // clip
+            r = (uint8_t)max(0, min(r2, 255));
+            g = (uint8_t)max(0, min(g2, 255));
+            b = (uint8_t)max(0, min(b2, 255));
 
             pixel = SDL_MapRGBA(ret->format, r, g, b, a);
 

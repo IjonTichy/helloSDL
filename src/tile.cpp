@@ -90,6 +90,7 @@ SDL_Surface* Tile::get_cached_sprite(string path, lightmod_t lightLevel)
 {
     spritecache_t* cacheRow;
     spritecache_t::iterator cacheIter;
+    SDL_Surface* ret;
 
     if (!Tile::cached_sprites.count(path)) { return NULL; }
 
@@ -97,7 +98,10 @@ SDL_Surface* Tile::get_cached_sprite(string path, lightmod_t lightLevel)
 
     if (!cacheRow->count(lightLevel)) { return NULL; }
 
-    return (*cacheRow)[lightLevel];
+    ret = (*cacheRow)[lightLevel];
+    ret->refcount++;
+
+    return ret;
 }
 
 void Tile::add_cached_sprite(string path, SDL_Surface* sprite, lightmod_t lightLevel)
@@ -149,7 +153,7 @@ void Tile::PrintCache(void)
         for (scIter = row->begin(); scIter != row->end(); ++scIter)
         {
             tint = scIter->first;
-            printf("  (%d, %d, %d): %#x\n", tint.r, tint.g, tint.b, scIter->second);
+            printf("  (%d, %d, %d, %d): %#x\n", tint.r, tint.g, tint.b, tint.mode, scIter->second);
         }
 
         printf("\n");
@@ -201,6 +205,8 @@ void Tile::init_sprite(lightmod_t tint) throw (NoErrorSprite)
     if (!this->badSprite)
     {
         newsprite = tintSurface(sprite, tint);
+        SDL_FreeSurface(sprite);
+
         this->sprite = newsprite;
     }
 

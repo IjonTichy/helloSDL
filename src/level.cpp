@@ -63,9 +63,10 @@ int Level::FromFile(char * filename)
         {
             tint = new lightmod_t;
 
-            tint->r = max(0, min(x * 12, 512));
-            tint->g = max(0, min(y * 12, 512));
+            tint->r = abs(x-25) * 32;
+            tint->g = abs(y-20) * 32;
             tint->b = 256;
+            tint->mode = LM_MULTIPLY;
 
             switch (nextChar)
             {
