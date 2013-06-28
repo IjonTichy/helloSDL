@@ -33,8 +33,10 @@ int Level::FromFile(char * filename)
 {
     char nextChar;
     unsigned int maxLength = 0;
+    int x = 0, y = 0;
     ifstream ifs(filename);
     vector<Tile*> curRow;
+    lightmod_t* tint;
     Tile* newTile;
 
     if (ifs.fail()) { return 1; }
@@ -55,16 +57,24 @@ int Level::FromFile(char * filename)
             maxLength = max(maxLength, (unsigned int)curRow.size());
             this->map.push_back(curRow);
             curRow.clear();
+            x = 0; y++;
         }
         else
         {
+            tint = new lightmod_t;
+
+            tint->r = max(0, min(x * 12, 512));
+            tint->g = max(0, min(y * 12, 512));
+            tint->b = 256;
+
             switch (nextChar)
             {
-                case '1': newTile = new Tile(this, "res/wall.png"); break;
-                default:  newTile = new Tile(this, "res/floor.png"); break;
+                case '1': newTile = new Tile(this, "res/wall.png", *tint); break;
+                default:  newTile = new Tile(this, "res/floor.png", *tint); break;
             }
 
             curRow.push_back(newTile);
+            x++;
         }
     }
 

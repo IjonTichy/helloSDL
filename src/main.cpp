@@ -32,6 +32,8 @@ int mainloop(SDL_Surface* screen)
     tmp.Render(screen, x, y);
     SDL_UpdateRect(screen, 0,0,0,0);
 
+    Tile::PrintCache();
+
     while (1)
     {
         x += xscroll;

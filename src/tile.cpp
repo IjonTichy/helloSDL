@@ -1,6 +1,7 @@
 #include <string>
 #include <typeinfo>
 #include <exception>
+#include <iostream>
 
 #include <SDL/SDL.h>
 #include <cxxabi.h>
@@ -42,9 +43,12 @@ void loadErrorSprite(void)
 
 spritemap_t Tile::cached_sprites;
 
-Tile::Tile(Level* l, string gfxPath = "") : sprite_path ("res/error.png")
+// TODO: Better way of including tints in the tile
+
+Tile::Tile(Level* l, string gfxPath, lightmod_t tint) : sprite_path ("res/error.png")
 {
     this->my_level = l;
+    this->tmp_tint = tint;
     this->sprite = NULL;
 
 #if defined(__GNUC__)
@@ -64,11 +68,11 @@ Tile::Tile(Level* l, string gfxPath = "") : sprite_path ("res/error.png")
 
 void Tile::LoadSprite(void)
 {
-    SDL_Surface* cachedSprite = Tile::get_cached_sprite(this->sprite_path, (lightmod_t)lightmod_normal);
+    SDL_Surface* cachedSprite = Tile::get_cached_sprite(this->sprite_path, this->tmp_tint);
 
     if (cachedSprite == NULL)
     {
-        this->init_sprite();
+        this->init_sprite(this->tmp_tint);
     }
     else
     {
@@ -85,6 +89,7 @@ void Tile::LoadSprite(void)
 SDL_Surface* Tile::get_cached_sprite(string path, lightmod_t lightLevel)
 {
     spritecache_t* cacheRow;
+    spritecache_t::iterator cacheIter;
 
     if (!Tile::cached_sprites.count(path)) { return NULL; }
 
@@ -129,38 +134,77 @@ void Tile::clear_cached_sprites(void)
     }
 }
 
-void Tile::init_sprite(void) throw (NoErrorSprite)
+void Tile::PrintCache(void)
+{
+    spritemap_t::iterator smIter;
+    spritecache_t::iterator scIter;
+    spritecache_t* row;
+    lightmod_t tint;
+
+    for (smIter = Tile::cached_sprites.begin(); smIter != Tile::cached_sprites.end(); ++smIter)
+    {
+        printf("%s:\n", smIter->first.c_str());
+        row = smIter->second;
+
+        for (scIter = row->begin(); scIter != row->end(); ++scIter)
+        {
+            tint = scIter->first;
+            printf("  (%d, %d, %d): %#x\n", tint.r, tint.g, tint.b, scIter->second);
+        }
+
+        printf("\n");
+    }
+}
+
+int Tile::CacheSize(void)
+{
+    int ret = 0;
+    spritemap_t::iterator smIter;
+
+    for (smIter = Tile::cached_sprites.begin(); smIter != Tile::cached_sprites.end(); ++smIter)
+    {
+        ret += smIter->second->size();
+    }
+
+    return ret;
+}
+void Tile::init_sprite(lightmod_t tint) throw (NoErrorSprite)
 {
     SDL_Surface* sprite;
     SDL_Surface* newsprite;
     loadErrorSprite();
 
     this->badSprite = 0;
-
-    sprite = loadImage((char*)this->sprite_path.c_str());
-    newsprite = tintSurface(sprite, lightmod_normal);
-
-    SDL_FreeSurface(sprite);
-
-    sprite = newsprite;
+    sprite = Tile::get_cached_sprite(this->sprite_path, lightmod_normal);
 
     if (sprite == NULL)
     {
-        if (errorSprite == NULL)  // wasn't defined oh_no
+        sprite = loadImage((char*)this->sprite_path.c_str());
+
+        if (sprite == NULL)
         {
-            NoErrorSprite noerr;
-            throw noerr;
+            if (errorSprite == NULL)  // wasn't defined oh_no
+            {
+                NoErrorSprite noerr;
+                throw noerr;
+            }
+
+            sprite = errorSprite;
+            sprite->refcount++;
+
+            this->badSprite = 1;
         }
 
-        sprite = errorSprite;
-        sprite->refcount++;
-
-        this->badSprite = 1;
+        Tile::add_cached_sprite(this->sprite_path, sprite, lightmod_normal);
     }
 
-    this->sprite = sprite;
+    if (!this->badSprite)
+    {
+        newsprite = tintSurface(sprite, tint);
+        this->sprite = newsprite;
+    }
 
-    Tile::add_cached_sprite(this->sprite_path, this->sprite, lightmod_normal);
+    Tile::add_cached_sprite(this->sprite_path, this->sprite, tint);
 }
 
 void Tile::Render(int x, int y, SDL_Surface* screen)

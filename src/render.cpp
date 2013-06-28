@@ -164,8 +164,6 @@ SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint)
 
     ret = skeletonSurface(src);
 
-    printf("skeleton surface (w: %d, h: %d, bpp: %d) at %#x\n", ret->w, ret->h, ret->format->BitsPerPixel, ret);
-
     if (tint == lightmod_black)
     {
         SDL_FillRect(ret, NULL, SDL_MapRGB(ret->format, 0, 0, 0));

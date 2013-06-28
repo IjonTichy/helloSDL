@@ -42,11 +42,15 @@ class Tile
         const char* my_name;
         string sprite_path;
         Level* my_level;
+        lightmod_t tmp_tint;
 
-        void init_sprite(void) throw (NoErrorSprite);
+        void init_sprite(lightmod_t tint) throw (NoErrorSprite);
 
     public:
-        Tile(Level* l, string gfxPath);
+        static void PrintCache(void);
+        static int CacheSize(void);
+
+        Tile(Level* l, string gfxPath = "", lightmod_t baseTint = lightmod_normal);
         void LoadSprite(void);
         void Render(int x, int y, SDL_Surface* screen);
 
