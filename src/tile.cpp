@@ -7,10 +7,11 @@
 
 #include "const.h"
 
-#include "tile.h"
 #include "level.h"
 #include "render.h"
 #include "loadData.h"
+
+#include "tile.h"
 
 using namespace std;
 
@@ -107,6 +108,7 @@ void Tile::add_cached_sprite(string path, SDL_Surface* sprite, lightmod_t lightL
     cacheRow = Tile::cached_sprites[path];
     curSprite = (*cacheRow)[lightLevel];
 
+    if (curSprite == sprite) { return; }
     if (curSprite != sprite && curSprite != NULL)
     {
         SDL_FreeSurface(curSprite);
@@ -130,10 +132,17 @@ void Tile::clear_cached_sprites(void)
 void Tile::init_sprite(void) throw (NoErrorSprite)
 {
     SDL_Surface* sprite;
+    SDL_Surface* newsprite;
     loadErrorSprite();
-    
+
     this->badSprite = 0;
+
     sprite = loadImage((char*)this->sprite_path.c_str());
+    newsprite = tintSurface(sprite, lightmod_normal);
+
+    SDL_FreeSurface(sprite);
+
+    sprite = newsprite;
 
     if (sprite == NULL)
     {

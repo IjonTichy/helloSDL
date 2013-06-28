@@ -102,7 +102,7 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
 {
     int bpp = surface->format->BytesPerPixel;
     /* Here p is the address to the pixel we want to set */
-    Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+    Uint8 *p = (Uint8 *)surface->pixels + (y * surface->pitch) + (x * bpp);
 
     switch(bpp)
     {
@@ -125,5 +125,79 @@ void putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
         break;
 
       case 4: *(Uint32 *)p = pixel; break;
+
+      default: break;
     }
+}
+
+SDL_Surface* copySurface(SDL_Surface* src)
+{
+    return SDL_ConvertSurface(src, src->format, src->flags);
+}
+
+SDL_Surface* skeletonSurface(SDL_Surface* src)
+{
+    const SDL_PixelFormat* fmt = src->format;
+    return SDL_CreateRGBSurface(src->flags, src->w, src->h, fmt->BitsPerPixel,
+                                fmt->Rmask, fmt->Gmask, fmt->Bmask, fmt->Amask);
+}
+
+
+SDL_Surface* tintSurface(SDL_Surface* src, lightmod_t tint)
+{
+    // Don't actually duplicate anything, but make it look like we did
+    if (tint == lightmod_normal)  
+    {
+        src->refcount++;
+        return src;
+    }
+
+    int rmod = tint.r - 256;
+    int gmod = tint.g - 256;
+    int bmod = tint.b - 256;
+    uint8_t r, g, b, a;
+    uint32_t pixel;
+
+    int x, y;
+
+    SDL_Surface* ret;
+
+    ret = skeletonSurface(src);
+
+    printf("skeleton surface (w: %d, h: %d, bpp: %d) at %#x\n", ret->w, ret->h, ret->format->BitsPerPixel, ret);
+
+    if (tint == lightmod_black)
+    {
+        SDL_FillRect(ret, NULL, SDL_MapRGB(ret->format, 0, 0, 0));
+        return ret;
+    }
+    else if (tint == lightmod_white)
+    {
+        SDL_FillRect(ret, NULL, SDL_MapRGB(ret->format, 255, 255, 255));
+        return ret;
+    }
+
+    SDL_LockSurface(src);
+    SDL_LockSurface(ret);
+
+    for (x = 0; x < ret->w; x++)
+    {
+        for (y = 0; y < ret->h; y++)
+        {
+            SDL_GetRGBA(getpixel(src, x, y), src->format, &r, &g, &b, &a);
+
+            r = (uint8_t)max(0, min((int)r + rmod, 255));
+            g = (uint8_t)max(0, min((int)g + gmod, 255));
+            b = (uint8_t)max(0, min((int)b + bmod, 255));
+
+            pixel = SDL_MapRGBA(ret->format, r, g, b, a);
+
+            putpixel(ret, x, y, pixel);
+        }
+    }
+
+    SDL_UnlockSurface(src);
+    SDL_UnlockSurface(ret);
+
+    return ret;
 }
