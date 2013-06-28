@@ -9,6 +9,11 @@ using namespace std;
 #include "tile.h"
 #include "const.h"
 
+inline void swap(int* a, int* b)
+{
+    *a ^= *b; *b ^= *a; *a ^= *b;
+}
+
 Level::Level(void)
 {
     this->map.clear();
@@ -33,9 +38,9 @@ int Level::FromFile(char * filename)
 {
     char nextChar;
     unsigned int maxLength = 0;
-    int x = 0, y = 0;
+    unsigned int x = 0, y = 0;
     ifstream ifs(filename);
-    vector<Tile*> curRow;
+    TileVector curRow;
     lightmod_t* tint;
     Tile* newTile;
 
@@ -63,15 +68,15 @@ int Level::FromFile(char * filename)
         {
             tint = new lightmod_t;
 
-            tint->r = abs(x-25) * 32;
-            tint->g = abs(y-20) * 32;
+            tint->r = abs((int)x-25) * 32;
+            tint->g = abs((int)y-20) * 32;
             tint->b = 256;
             tint->mode = LM_MULTIPLY;
 
             switch (nextChar)
             {
-                case '1': newTile = new Tile(this, "res/wall.png", *tint); break;
-                default:  newTile = new Tile(this, "res/floor.png", *tint); break;
+                case '1': newTile = new Tile(this, x, y, "res/wall.png", *tint); break;
+                default:  newTile = new Tile(this, x, y, "res/floor.png", *tint); break;
             }
 
             curRow.push_back(newTile);
@@ -129,4 +134,52 @@ void Level::Render(SDL_Surface* screen, int baseX, int baseY)
             tile->Render(x, y, screen);
         }
     }
+}
+
+TileVector Level::TileLine(int x1, int y1, int x2, int y2)
+{
+    int endSize = max(abs(x2-x1), abs(y2-y1))+1;
+    int x, y, i, index;
+    bool steep, backwards;
+    TileVector ret;
+    ret.resize(endSize);
+
+    steep = abs(x2-x1) < abs(y2-y1);
+    if (steep)
+    {
+        swap(&x1, &y1);
+        swap(&x2, &y2);
+    }
+
+    backwards = x1 > x2;
+
+    if (backwards)
+    {
+        swap(&x1, &x2);
+        swap(&y1, &y2);
+    }
+
+    int dx = x2 - x1;
+    int dy = y2 - y1;
+
+    int ystep = y1 > y2 ? -1 : 1;
+    int error = dx >> 1;
+
+    y = y1;
+
+    for (x = x1, i = 0; x <= x2; x++, i++)
+    {
+        index = backwards ? (endSize - i - 1) : i;
+        ret[index] = steep ? this->GetTile(y, x) : this->GetTile(x, y);
+
+        error -= dy;
+
+        if (error < 0)
+        {
+            y += ystep;
+            error += dx;
+        }
+    }
+
+    return ret;
 }

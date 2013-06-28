@@ -43,6 +43,7 @@ class Tile
         string sprite_path;
         Level* my_level;
         lightmod_t tmp_tint;
+        unsigned int x, y;
 
         void init_sprite(lightmod_t tint) throw (NoErrorSprite);
 
@@ -50,7 +51,7 @@ class Tile
         static void PrintCache(void);
         static int CacheSize(void);
 
-        Tile(Level* l, string gfxPath = "", lightmod_t baseTint = lightmod_normal);
+        Tile(Level* l, unsigned int x, unsigned int y, string gfxPath = "", lightmod_t tint = lightmod_normal);
         void LoadSprite(void);
         void Render(int x, int y, SDL_Surface* screen);
 

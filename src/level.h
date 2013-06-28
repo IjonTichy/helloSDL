@@ -13,7 +13,8 @@ using namespace std;
 class Tile;
 
 struct levelsize { unsigned int w; unsigned int h; };
-typedef vector< vector<Tile*> > MapVector;
+typedef vector<Tile*> TileVector;
+typedef vector<TileVector> MapVector;
 
 class Level
 {
@@ -27,6 +28,7 @@ class Level
         int FromFile(char * filename);
         struct levelsize Size(void);
         void Render(SDL_Surface* screen, int originX, int originY);
+        TileVector TileLine(int x1, int y1, int x2, int y2);
 };
 
 #endif

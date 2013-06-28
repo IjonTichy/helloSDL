@@ -45,11 +45,13 @@ spritemap_t Tile::cached_sprites;
 
 // TODO: Better way of including tints in the tile
 
-Tile::Tile(Level* l, string gfxPath, lightmod_t tint) : sprite_path ("res/error.png")
+Tile::Tile(Level* l, unsigned int x, unsigned int y, string gfxPath, lightmod_t tint) : sprite_path ("res/error.png")
 {
     this->my_level = l;
     this->tmp_tint = tint;
     this->sprite = NULL;
+    this->x = x;
+    this->y = y;
 
 #if defined(__GNUC__)
     int status;

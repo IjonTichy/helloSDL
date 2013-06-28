@@ -32,8 +32,6 @@ int mainloop(SDL_Surface* screen)
     tmp.Render(screen, x, y);
     SDL_UpdateRect(screen, 0,0,0,0);
 
-    printf("%d, %d, %d, %d\n", lightmod_normal.r, lightmod_normal.g, lightmod_normal.b, lightmod_normal.mode);
-
     while (1)
     {
         x += xscroll;
